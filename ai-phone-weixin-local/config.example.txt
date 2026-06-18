@@ -1,0 +1,8 @@
+# AI Phone 微信本地助手配置示例
+#
+# 不要把真实 service_role key 或完整配置码提交/分享。
+# Termux 版本请运行：
+#   ./termux-start.sh
+# 然后在浏览器打开：
+#   http://127.0.0.1:8787
+# 在网页里输入 Supabase URL 和 service_role key，程序会自动生成 config.txt。
