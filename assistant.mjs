@@ -1404,8 +1404,8 @@ function printHelp() {
   node tools/weixin-local-assistant/assistant.mjs --interval 3
 
 配置：
-  1. 在小手机「微信设置」下载本地助手包。
-  2. 解压后运行本脚本；config.txt 已包含配置。
+  1. 发布包不内置真实 Supabase URL/key。
+  2. 请自行创建 config.txt，或使用 --config CODE 传入配置码；Termux 可运行 ./termux-start.sh，并在提示时输入 y 打开配置页生成 config.txt。
 
 参数：
   --once          只轮询一次，用于测试

@@ -1,8 +1,13 @@
 # AI Phone 微信本地助手配置示例
 #
 # 不要把真实 service_role key 或完整配置码提交/分享。
-# Termux 版本请运行：
+# 本文件不包含可用的 Supabase URL/key；用户必须自行配置。
+# Termux 版本安装或启动时会提醒先去小手机提交远程备份/上传最新微信运行包。
+# 可运行：
+#   ./termux-install.sh
+# 或：
 #   ./termux-start.sh
-# 然后在浏览器打开：
+# 启动时输入 y 可打开本地配置页：
 #   http://127.0.0.1:8787
-# 在网页里输入 Supabase URL 和 service_role key，程序会自动生成 config.txt。
+# 输入 n 可跳过配置页并直接启动助手。
+# 在网页里输入 Supabase URL 和 service_role key 并保存后，回到 Termux 按提示回车继续，程序会自动生成 config.txt。

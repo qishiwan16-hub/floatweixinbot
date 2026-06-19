@@ -19,6 +19,8 @@ fi
 
 chmod +x ./termux-start.sh ./termux-install.sh 2>/dev/null || true
 
-printf '\n[AI Phone] 安装完成\n'
-echo "[AI Phone] 下一步运行：./termux-start.sh"
-echo "[AI Phone] 配置页地址：http://127.0.0.1:8787"
+printf '\n[AI Phone] 安装完成，即将进入启动流程。\n'
+echo "[AI Phone] 接下来会进入 termux-start.sh。"
+echo "[AI Phone] 启动前会提醒先去小手机提交远程备份/上传最新微信运行包。"
+echo "[AI Phone] 随后可输入 y 打开本地配置页，或输入 n 跳过配置页直接启动助手。"
+exec ./termux-start.sh
