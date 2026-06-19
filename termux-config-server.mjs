@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 import { createServer } from "node:http";
-import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const CONFIG_PATH = resolve(here, "config.txt");
 const CONFIG_TMP_PATH = resolve(here, "config.txt.tmp");
+const CONFIG_EXAMPLE_PATH = resolve(here, "config.example.txt");
 const DEFAULT_BUCKET = "ai-phone-backup";
 const DEFAULT_INTERVAL_SECONDS = 5;
 const INDEX_PATH = "weixin-cloud/index.json";
@@ -27,12 +28,21 @@ const server = createServer(async (req, res) => {
     }
     if (req.method === "POST" && url.pathname === "/save") {
       const form = parseUrlEncoded(await readRequestBody(req));
-      const config = buildConfigFromForm(form);
-      const savedCode = saveConfig(config);
-      sendHtml(res, renderPage(getConfigStatus(), {
-        type: "success",
-        message: `配置已保存。已写入 config.txt，长度 ${savedCode.length} 字符。刷新页面后会自动回填 Supabase URL；key 不会明文显示。`,
-      }));
+      const submittedUrl = String(form.supabaseUrl || "").trim();
+      try {
+        const config = buildConfigFromForm(form);
+        const result = saveConfig(config);
+        const exampleDelete = result.exampleDelete;
+        sendHtml(res, renderPage(getConfigStatus(), {
+          type: exampleDelete.error ? "warning" : "success",
+          message: formatSaveSuccessMessage(result),
+        }, { supabaseUrl: result.config.supabaseUrl }));
+      } catch (err) {
+        sendHtml(res, renderPage(getConfigStatus(), {
+          type: "error",
+          message: `配置保存失败：${errorMessage(err)}`,
+        }, { supabaseUrl: submittedUrl }), 200);
+      }
       return;
     }
     if (req.method === "POST" && url.pathname === "/test") {
@@ -101,10 +111,46 @@ function validateConfig(config) {
 }
 
 function saveConfig(config) {
-  const code = Buffer.from(JSON.stringify(validateConfig(config)), "utf8").toString("base64url");
-  writeFileSync(CONFIG_TMP_PATH, `${code}\n`, { encoding: "utf8", mode: 0o600 });
-  renameSync(CONFIG_TMP_PATH, CONFIG_PATH);
-  return code;
+  const checked = validateConfig(config);
+  const code = Buffer.from(JSON.stringify(checked), "utf8").toString("base64url");
+  try {
+    writeFileSync(CONFIG_TMP_PATH, `${code}\n`, { encoding: "utf8", mode: 0o600 });
+  } catch (err) {
+    throw new Error(`未能写入临时配置文件 config.txt.tmp：${errorMessage(err)}`);
+  }
+  try {
+    renameSync(CONFIG_TMP_PATH, CONFIG_PATH);
+  } catch (err) {
+    throw new Error(`未能把临时配置文件替换为 config.txt：${errorMessage(err)}`);
+  }
+  return { code, config: checked, exampleDelete: deleteExampleConfigIfPresent() };
+}
+
+function deleteExampleConfigIfPresent() {
+  if (!existsSync(CONFIG_EXAMPLE_PATH)) {
+    return { existed: false, deleted: false, error: "" };
+  }
+  try {
+    unlinkSync(CONFIG_EXAMPLE_PATH);
+    return { existed: true, deleted: true, error: "" };
+  } catch (err) {
+    return { existed: true, deleted: false, error: errorMessage(err) };
+  }
+}
+
+function formatSaveSuccessMessage(result) {
+  const parts = [
+    `配置已保存，Supabase URL 已写入 config.txt：${result.config.supabaseUrl}。`,
+    `Key 已保存：${maskKey(result.config.supabaseServiceRoleKey)}（不会明文显示）。`,
+  ];
+  if (result.exampleDelete.deleted) {
+    parts.push("已删除示例配置文件 config.example.txt。");
+  } else if (result.exampleDelete.error) {
+    parts.push(`配置已保存，但示例文件删除失败：${result.exampleDelete.error}`);
+  } else {
+    parts.push("本地未发现示例配置文件 config.example.txt，无需删除。");
+  }
+  return parts.join(" ");
 }
 
 async function testSupabaseConfig(config) {
@@ -176,13 +222,19 @@ function getConfigStatus(overrideConfig = null) {
 
   const raw = readConfigText().trim();
   if (!raw) {
-    return { exists: false, valid: false, message: "尚未保存配置", supabaseUrl: "", keySaved: false };
+    return {
+      exists,
+      valid: false,
+      message: exists ? "config.txt 已存在但内容为空" : "尚未保存配置",
+      supabaseUrl: "",
+      keySaved: false,
+    };
   }
   try {
     const parsed = readSavedConfig();
-    return configToStatus(parsed, exists, "配置有效");
+    return configToStatus(parsed, exists, "已读取到本地配置，URL 已写入 config.txt");
   } catch (err) {
-    return { exists, valid: false, message: errorMessage(err), supabaseUrl: "", keySaved: false };
+    return { exists, valid: false, message: `config.txt 读取失败：${errorMessage(err)}`, supabaseUrl: "", keySaved: false };
   }
 }
 
@@ -283,7 +335,7 @@ button{border:0;border-radius:999px;padding:12px 18px;font-weight:700;background
 button.secondary{background:#374151;}
 .badge{display:inline-block;border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700;}
 .ok{background:#ecfdf3;color:#027a48;}.warn{background:#fff7ed;color:#c2410c;}.muted{background:#f3f4f6;color:#4b5563;}
-.flash{border-radius:12px;padding:12px;margin:12px 0;font-weight:700;}.flash.success{background:#ecfdf3;color:#027a48;}.flash.error{background:#fef2f2;color:#b42318;}
+.flash{border-radius:12px;padding:12px;margin:12px 0;font-weight:700;}.flash.success{background:#ecfdf3;color:#027a48;}.flash.warning{background:#fff7ed;color:#c2410c;}.flash.error{background:#fef2f2;color:#b42318;}
 small{display:block;color:#667085;margin-top:6px;line-height:1.55;}.danger{color:#b42318;font-weight:700;} code{background:#f3f4f6;border-radius:6px;padding:2px 5px;}
 @media (prefers-color-scheme:dark){body{background:#111827;color:#e5e7eb}.card{background:#1f2937;border-color:#374151}input{background:#111827;border-color:#4b5563}.muted{background:#374151;color:#d1d5db}code{background:#111827}}
 </style>
@@ -295,7 +347,7 @@ ${flashHtml}
 <section class="card">
   <h2>当前状态 <span class="badge ${statusClass}">${escapeHtml(status.message || "未知")}</span></h2>
   <p>配置文件：<code>config.txt</code> ${status.exists ? "已存在" : "未创建"}</p>
-  ${status.valid ? `<p>Supabase：<code>${escapeHtml(status.supabaseHost)}</code><br>Bucket：<code>${escapeHtml(status.bucket)}</code><br>轮询间隔：<code>${escapeHtml(String(status.interval))}s</code><br>Key：<code>${escapeHtml(status.keyPreview)}</code></p>` : ""}
+  ${status.valid ? `<p>Supabase URL 已写入 <code>config.txt</code>：<code>${escapeHtml(status.supabaseUrl)}</code><br>Bucket：<code>${escapeHtml(status.bucket)}</code><br>轮询间隔：<code>${escapeHtml(String(status.interval))}s</code><br>Key（打码显示）：<code>${escapeHtml(status.keyPreview)}</code></p>` : ""}
 </section>
 <section class="card">
   <h2>方式一：输入 Supabase URL 和 service_role key</h2>

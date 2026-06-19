@@ -117,14 +117,17 @@ http://127.0.0.1:8787
 3. 在网页里填写你自己的 service_role key。
 4. 可以先点“测试连接”，它会读取默认 Bucket ai-phone-backup 里的 weixin-cloud/index.json，确认能访问远端运行包索引。
 5. 点“保存配置”。
-6. 保存成功后，回到 Termux。
-7. 按回车继续启动助手。
+6. 保存成功后，页面会明确显示“Supabase URL 已写入 config.txt”，并显示写入的是哪个 URL；service_role key 只显示打码，不会明文展示。
+7. 保存成功写入 config.txt 后，页面会尝试删除本机目录里的 config.example.txt，避免你把示例文件和真实配置搞混；删除失败不会影响 config.txt 保存成功，页面会显示失败原因。
+8. 回到 Termux。
+9. 按回车继续启动助手。
 
 如果以前保存过配置：
 1. 页面会自动回填已保存的 Supabase URL。
-2. service_role key 不会明文显示，只显示打码占位。
-3. 不填 key 会沿用已保存 key。
-4. 点击 key 输入框可以重新输入新的 key。
+2. 页面当前状态会提示“已读取到本地配置，URL 已写入 config.txt”。
+3. service_role key 不会明文显示，只显示打码占位。
+4. 不填 key 会沿用已保存 key。
+5. 点击 key 输入框可以重新输入新的 key。
 
 选择 B：输入 n
 
@@ -172,14 +175,17 @@ Windows 推荐也使用本地配置页生成 config.txt。
 4. 填写你自己的 Supabase URL 和 service_role key。
 5. 可以先点“测试连接”，它会读取默认 Bucket ai-phone-backup 里的 weixin-cloud/index.json，确认能访问远端运行包索引。
 6. 点“保存配置”，程序会自动生成 config.txt。
-7. 看到保存成功后，回到命令行窗口按 Ctrl+C 停止配置页。
-8. 不要把真实 config.txt 发给别人，也不要提交到公开仓库。
+7. 看到页面提示“Supabase URL 已写入 config.txt”后，确认显示的是你自己的 URL；service_role key 只会打码显示，不会明文展示。
+8. 写入 config.txt 成功后，配置页会尝试删除本机目录里的 config.example.txt；删除失败不会影响保存，页面会显示失败原因。
+9. 回到命令行窗口按 Ctrl+C 停止配置页。
+10. 不要把真实 config.txt 发给别人，也不要提交到公开仓库。
 
 如果以前保存过配置：
 1. 页面会自动回填已保存的 Supabase URL。
-2. service_role key 不会明文显示，只显示打码占位。
-3. 不填 key 会沿用已保存 key。
-4. 点击 key 输入框可以重新输入新的 key。
+2. 页面当前状态会提示“已读取到本地配置，URL 已写入 config.txt”。
+3. service_role key 不会明文显示，只显示打码占位。
+4. 不填 key 会沿用已保存 key。
+5. 点击 key 输入框可以重新输入新的 key。
 
 第 4 步：正常启动
 
@@ -207,10 +213,57 @@ Termux 上的做法：
 5. 填新的 Supabase URL；如果只是换 URL 且 key 不变，可以不填 key，系统会沿用已保存 key。
 6. 如果要更换 key，点击 key 输入框重新输入新的 service_role key。
 7. 可以点“测试连接”确认能读取 ai-phone-backup/weixin-cloud/index.json。
-8. 保存。
-9. 回到 Termux 按回车继续。
+8. 保存后看页面提示，确认 Supabase URL 已写入 config.txt；key 只会打码显示。
+9. 保存成功写入 config.txt 后，页面会尝试删除本机目录里的 config.example.txt；如果删除失败，页面会把原因写出来，但不会影响配置保存成功。
+10. 回到 Termux 按回车继续。
 
-六、非常重要的注意事项
+六、更新教程/以后更新项目（宝宝级）
+
+先记住：更新项目不等于把你的真实配置发出去。config.txt 是你自己的隐私文件，不要发给别人，不要截图公开，不要提交到 GitHub。
+
+方法 A：已经用 Git 克隆过项目，直接 git pull 更新
+
+1. 打开 Termux。
+2. 进入项目目录：
+
+cd floatweixinbot
+
+3. 拉取 GitHub 最新代码：
+
+git pull
+
+4. 更新完成后，正常启动：
+
+bash termux-start.sh
+
+5. 启动前还是要先去“小手机”提交远程备份/上传最新微信运行包。
+
+方法 B：重新运行一键安装命令
+
+如果你不确定自己有没有进对目录，也可以重新复制首次安装的一键命令：
+
+pkg update -y && pkg install -y git bash && rm -rf floatweixinbot && git clone https://github.com/qishiwan16-hub/floatweixinbot.git && cd floatweixinbot && bash termux-install.sh
+
+这条命令会重新从 GitHub 克隆最新项目，然后进入安装/启动流程。注意：它会先删除当前目录下旧的 floatweixinbot 文件夹，所以如果旧文件夹里有你想保留的东西，请先自己备份；尤其不要把自己的 config.txt 发给别人。
+
+方法 C：Raw 一键命令也可以更新/重新克隆
+
+你也可以重新运行 Raw 方式：
+
+pkg update -y && pkg install -y curl bash && curl -fsSL https://raw.githubusercontent.com/qishiwan16-hub/floatweixinbot/main/termux-install.sh | bash
+
+Raw 脚本会自动检测当前是否在项目目录；如果不在项目目录，会自动克隆或更新 https://github.com/qishiwan16-hub/floatweixinbot.git，再进入启动流程。
+
+更新前后注意事项：
+1. 不要把自己的 config.txt 发给别人。
+2. 不要把 Supabase URL 或 service_role key 发给别人。
+3. 更新后如果 config.txt 还在，并且你不需要换配置，启动时可以输入 n 跳过配置页。
+4. 更新后如果配置丢失，或者你需要更换 Supabase URL/key，启动时输入 y 打开本地配置页重新保存。
+5. 本地配置页保存后会明确提示 Supabase URL 已写入 config.txt，并显示写入的是哪个 URL。
+6. service_role key 只会打码显示，不会明文显示。
+7. 写入 config.txt 成功后，页面会尝试删除本机目录里的 config.example.txt，避免你把示例配置当成真实配置；删除失败也不会影响 config.txt 保存成功。
+
+七、非常重要的注意事项
 
 1. 每次启动前，先去小手机提交远程备份/上传最新微信运行包。
    - 不做这一步，本地助手可能读到旧数据。
@@ -249,7 +302,7 @@ Termux 上的做法：
    - Termux 可以复制推荐的一键 Bash 命令自动安装，也可以在项目目录执行 bash termux-install.sh。
    - Windows 如果提示找不到 Node.js，就安装 Node.js 20+，或者使用带 runtime 的发布包。
 
-七、常见启动失败排查
+八、常见启动失败排查
 
 1. 提示缺少配置
 
@@ -311,7 +364,7 @@ Termux 上的做法：
 - 不要把 127.0.0.1 换成别人的手机或电脑地址。
 - 如果仍然打不开，按 Ctrl+C 停止后重新运行 cd floatweixinbot && bash termux-start.sh。
 
-八、脚本说明
+九、脚本说明
 
 1. termux-install.sh
    - Termux 一键安装/启动脚本。
@@ -337,7 +390,7 @@ Termux 上的做法：
    - 不包含真实 Supabase URL。
    - 不包含真实 service_role key。
 
-九、最后再提醒一次
+十、最后再提醒一次
 
 1. 每次启动前，先让小手机提交远程备份/上传最新微信运行包。
 2. 不要把 Supabase URL、service_role key、config.txt 发给别人。
