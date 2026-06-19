@@ -115,9 +115,16 @@ http://127.0.0.1:8787
 1. 用同一台手机的浏览器打开 http://127.0.0.1:8787。
 2. 在网页里填写你自己的 Supabase URL。
 3. 在网页里填写你自己的 service_role key。
-4. 保存配置。
-5. 保存成功后，回到 Termux。
-6. 按回车继续启动助手。
+4. 可以先点“测试连接”，它会读取默认 Bucket ai-phone-backup 里的 weixin-cloud/index.json，确认能访问远端运行包索引。
+5. 点“保存配置”。
+6. 保存成功后，回到 Termux。
+7. 按回车继续启动助手。
+
+如果以前保存过配置：
+1. 页面会自动回填已保存的 Supabase URL。
+2. service_role key 不会明文显示，只显示打码占位。
+3. 不填 key 会沿用已保存 key。
+4. 点击 key 输入框可以重新输入新的 key。
 
 选择 B：输入 n
 
@@ -157,29 +164,22 @@ cd floatweixinbot
 
 第 3 步：准备配置
 
-Windows 可以用两种方式提供配置。
+Windows 推荐也使用本地配置页生成 config.txt。
 
-方式 A：使用 config.txt
+1. 在项目文件夹里打开命令提示符或 PowerShell。
+2. 运行：node termux-config-server.mjs
+3. 用浏览器打开 http://127.0.0.1:8787。
+4. 填写你自己的 Supabase URL 和 service_role key。
+5. 可以先点“测试连接”，它会读取默认 Bucket ai-phone-backup 里的 weixin-cloud/index.json，确认能访问远端运行包索引。
+6. 点“保存配置”，程序会自动生成 config.txt。
+7. 看到保存成功后，回到命令行窗口按 Ctrl+C 停止配置页。
+8. 不要把真实 config.txt 发给别人，也不要提交到公开仓库。
 
-1. 参考 config.example.txt。
-2. 自己创建 config.txt。
-3. 把你自己的配置码写进去。
-4. 不要把真实 config.txt 发给别人。
-5. 不要把真实 config.txt 提交到公开仓库。
-
-方式 B：使用 --config
-
-如果你不想写 config.txt，可以在命令行里传入配置码。
-
-正常启动示例：
-
-node assistant.mjs --config "你的配置码"
-
-只测试一次示例：
-
-node assistant.mjs --once --config "你的配置码"
-
-注意：这里的“你的配置码”必须换成你自己的配置码。README 里不会写真实配置码，也不会写真实 key。
+如果以前保存过配置：
+1. 页面会自动回填已保存的 Supabase URL。
+2. service_role key 不会明文显示，只显示打码占位。
+3. 不填 key 会沿用已保存 key。
+4. 点击 key 输入框可以重新输入新的 key。
 
 第 4 步：正常启动
 
@@ -204,9 +204,11 @@ Termux 上的做法：
 2. 先完成小手机远程备份。
 3. 问你是否打开配置页时，输入 y。
 4. 浏览器打开 http://127.0.0.1:8787。
-5. 填新的 Supabase URL 或新的 service_role key。
-6. 保存。
-7. 回到 Termux 按回车继续。
+5. 填新的 Supabase URL；如果只是换 URL 且 key 不变，可以不填 key，系统会沿用已保存 key。
+6. 如果要更换 key，点击 key 输入框重新输入新的 service_role key。
+7. 可以点“测试连接”确认能读取 ai-phone-backup/weixin-cloud/index.json。
+8. 保存。
+9. 回到 Termux 按回车继续。
 
 六、非常重要的注意事项
 
@@ -225,29 +227,24 @@ Termux 上的做法：
    - 不要写进 README。
    - 不要提交到公开 GitHub 仓库。
 
-4. 配置码是隐私。
-   - 配置码里会包含连接远端需要的信息。
-   - 不要发给别人。
-   - 不要放到公开地方。
-
-5. config.txt 是隐私文件。
-   - 它可能包含完整配置码。
+4. config.txt 是隐私文件。
+   - 它包含连接远端需要的信息。
    - 不要提交到公开仓库。
    - 不要打包发给别人。
    - config.example.txt 只是示例说明，不包含真实可用密钥。
 
-6. 如果微信 token 过期：
+5. 如果微信 token 过期：
    - 本地助手可能无法继续正常收发微信消息。
    - 需要回到小手机重新扫码/刷新 token。
    - 刷新后再让小手机提交远程备份/上传最新微信运行包。
    - 然后重新启动本地助手。
 
-7. 默认 Bucket：
+6. 默认 Bucket：
    - 默认使用 ai-phone-backup。
    - 普通用户不需要改。
    - 除非你明确知道自己在改什么，否则保持默认。
 
-8. Node.js 版本要求：
+7. Node.js 版本要求：
    - 需要 Node.js 20 或更高版本。
    - Termux 可以复制推荐的一键 Bash 命令自动安装，也可以在项目目录执行 bash termux-install.sh。
    - Windows 如果提示找不到 Node.js，就安装 Node.js 20+，或者使用带 runtime 的发布包。
@@ -259,31 +256,42 @@ Termux 上的做法：
 可能原因：
 - 没有 config.txt。
 - config.txt 是空的。
-- 没有通过 --config 传入配置码。
-
 解决办法：
 - Termux：运行 ./termux-start.sh，输入 y 打开配置页，保存配置。
-- Windows：创建 config.txt，或用 node assistant.mjs --config "你的配置码" 启动。
+- Windows：运行 node termux-config-server.mjs，打开 http://127.0.0.1:8787 保存配置。
 
-2. 提示配置码格式不正确
+2. 提示配置格式不正确
 
 可能原因：
-- 复制配置码时少复制了一段。
-- 多复制了空格、说明文字或换行。
-- 配置码不是这个工具需要的格式。
+- config.txt 不是本工具生成的配置。
+- config.txt 内容被手动改坏。
+- config.txt 复制时多了说明文字或少了一段内容。
 
 解决办法：
-- 重新复制完整配置码。
-- 重新保存 config.txt。
-- 或在 Termux 配置页重新填写 Supabase URL 和 service_role key 后保存。
+- 重新打开配置页，填写 Supabase URL 和 service_role key 后保存。
+- 如果只是更换 Supabase URL 且 key 不变，可以不填 key，系统会沿用已保存 key。
 
-3. 提示 Node.js was not found 或未检测到 Node.js
+3. 测试连接失败
+
+可能原因：
+- Supabase URL 填错。
+- service_role key 填错或权限不足。
+- 默认 Bucket ai-phone-backup 不存在。
+- weixin-cloud/index.json 还没有上传。
+- 手机或电脑当前网络无法访问 Supabase。
+
+解决办法：
+- 检查 Supabase URL 和 service_role key。
+- 先让小手机提交远程备份/上传最新微信运行包。
+- 再回配置页点“测试连接”。页面会显示具体失败原因，不会因为测试失败退出 Node 进程。
+
+4. 提示 Node.js was not found 或未检测到 Node.js
 
 解决办法：
 - Termux：复制推荐的一键 Bash 命令，或在项目目录执行 bash termux-install.sh。
 - Windows：安装 Node.js 20+，或者使用带 runtime\node.exe 的发布包。
 
-4. 能启动，但微信消息不同步
+5. 能启动，但微信消息不同步
 
 可能原因：
 - 启动前没有在小手机提交远程备份。
@@ -295,7 +303,7 @@ Termux 上的做法：
 - 如果 token 过期，回小手机重新扫码/刷新 token，再重新备份。
 - 重新启动本地助手。
 
-5. Termux 输入 y 后打不开配置页
+6. Termux 输入 y 后打不开配置页
 
 解决办法：
 - 确认 Termux 窗口还在运行。
@@ -332,7 +340,7 @@ Termux 上的做法：
 九、最后再提醒一次
 
 1. 每次启动前，先让小手机提交远程备份/上传最新微信运行包。
-2. 不要把 Supabase URL、service_role key、配置码、config.txt 发给别人。
+2. 不要把 Supabase URL、service_role key、config.txt 发给别人。
 3. 换配置时，Termux 启动输入 y，打开配置页重新保存。
 4. 微信 token 过期时，回小手机重新扫码/刷新，再重新备份。
 5. README 不内置任何真实 Supabase URL 或 key。
