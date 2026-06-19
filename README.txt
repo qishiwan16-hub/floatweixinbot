@@ -24,61 +24,63 @@ https://github.com/qishiwan16-hub/floatweixinbot.git
    - 每次启动本地助手前，都先去“小手机”提交远程备份/上传最新微信运行包。
    - 这样本地助手才能从远端读取最新的微信登录状态、角色、预设、记忆等信息。
 
-二、Termux 安装教程（安卓手机上用）
+二、Termux 安装/启动教程（安卓手机上用，推荐一键复制命令）
 
-第 1 步：安装 Termux
+第 1 步：安装并打开 Termux
 
 1. 在安卓手机上安装 Termux。
 2. 打开 Termux。
 3. 如果手机弹出存储权限，请允许。
 
-第 2 步：在 Termux 里安装 git
+第 2 步：复制推荐的一键 Bash 命令
 
-在 Termux 里一行一行输入下面命令，输完一行按一次回车：
+在 Termux 里复制下面这一整行，然后按回车：
+
+pkg update -y && pkg install -y git bash && rm -rf floatweixinbot && git clone https://github.com/qishiwan16-hub/floatweixinbot.git && cd floatweixinbot && bash termux-install.sh
+
+这条命令会自动做这些事：
+1. 更新 Termux 软件源。
+2. 安装 git 和 bash。
+3. 删除旧的 floatweixinbot 文件夹，避免新手重复安装时进入旧目录。
+4. 从 GitHub 下载最新项目。
+5. 进入 floatweixinbot 项目文件夹。
+6. 运行 termux-install.sh。
+7. 安装 Node.js，并进入 termux-start.sh 启动流程。
+
+第 3 步：可选 Raw 一键 Bash 命令
+
+如果你想用 GitHub Raw 方式，也可以复制下面这一整行：
+
+pkg update -y && pkg install -y curl bash && curl -fsSL https://raw.githubusercontent.com/qishiwan16-hub/floatweixinbot/main/termux-install.sh | bash
+
+Raw 方式会先运行远端 termux-install.sh。脚本会自动安装必要依赖，检测当前是否已经在项目目录；如果不在项目目录，会自动克隆或更新 https://github.com/qishiwan16-hub/floatweixinbot.git，然后进入启动流程。
+
+第 4 步：手动安装方式（备用）
+
+如果一键命令失败，再按下面方式一行一行输入：
 
 pkg update -y
-pkg install -y git
-
-第 3 步：从 GitHub 下载项目
-
-在 Termux 里输入：
-
+pkg install -y git bash
+rm -rf floatweixinbot
 git clone https://github.com/qishiwan16-hub/floatweixinbot.git
-
-下载完成后，进入项目文件夹：
-
 cd floatweixinbot
+bash termux-install.sh
 
-第 4 步：执行一键安装脚本
-
-在 Termux 里输入：
-
-chmod +x ./termux-install.sh ./termux-start.sh
-./termux-install.sh
-
-它会自动做这些事：
-1. 检查你是不是在 Termux 里运行。
-2. 安装 Node.js。
-3. 尝试打开 Termux 存储权限。
-4. 安装完成后自动进入启动流程。
+手动方式和一键命令做的事情一样：安装依赖、下载项目、运行安装脚本、进入启动流程。
 
 三、Termux 启动教程（以后每天/每次这样启动）
 
-第 1 步：进入项目文件夹
+第 1 步：复制每天启动命令
 
-如果你刚打开 Termux，先输入：
+如果你已经完成过首次安装，刚打开 Termux 后，复制下面这一整行，然后按回车：
 
-cd floatweixinbot
+cd floatweixinbot && bash termux-start.sh
 
-如果提示找不到文件夹，说明你现在不在当初下载项目的位置。你可以重新回到当初保存项目的目录，再进入 floatweixinbot。
+这条命令会进入项目文件夹，并运行 termux-start.sh 启动脚本。
 
-第 2 步：运行启动脚本
+如果提示找不到 floatweixinbot 文件夹，说明你现在不在当初下载项目的位置。你可以重新回到当初保存项目的目录，再执行上面这条每天启动命令。
 
-输入：
-
-./termux-start.sh
-
-第 3 步：先做远程备份
+第 2 步：先做远程备份
 
 启动脚本会先提醒：
 请先去小手机提交远程备份/上传最新微信运行包。
@@ -90,7 +92,7 @@ cd floatweixinbot
 4. 确认上传完成。
 5. 回到 Termux，按回车继续。
 
-第 4 步：选择要不要打开配置页
+第 3 步：选择要不要打开配置页
 
 脚本会问你：
 是否打开本地配置页？输入 y 打开配置页，输入 n 跳过配置页并直接启动助手 [y/n]
@@ -198,7 +200,7 @@ node assistant.mjs --once --config "你的配置码"
 只要你换了配置，就重新打开配置页保存一次。
 
 Termux 上的做法：
-1. 运行 ./termux-start.sh。
+1. 复制每天启动命令：cd floatweixinbot && bash termux-start.sh。
 2. 先完成小手机远程备份。
 3. 问你是否打开配置页时，输入 y。
 4. 浏览器打开 http://127.0.0.1:8787。
@@ -247,7 +249,7 @@ Termux 上的做法：
 
 8. Node.js 版本要求：
    - 需要 Node.js 20 或更高版本。
-   - Termux 可以运行 ./termux-install.sh 自动安装。
+   - Termux 可以复制推荐的一键 Bash 命令自动安装，也可以在项目目录执行 bash termux-install.sh。
    - Windows 如果提示找不到 Node.js，就安装 Node.js 20+，或者使用带 runtime 的发布包。
 
 七、常见启动失败排查
@@ -278,7 +280,7 @@ Termux 上的做法：
 3. 提示 Node.js was not found 或未检测到 Node.js
 
 解决办法：
-- Termux：执行 ./termux-install.sh。
+- Termux：复制推荐的一键 Bash 命令，或在项目目录执行 bash termux-install.sh。
 - Windows：安装 Node.js 20+，或者使用带 runtime\node.exe 的发布包。
 
 4. 能启动，但微信消息不同步
@@ -299,14 +301,14 @@ Termux 上的做法：
 - 确认 Termux 窗口还在运行。
 - 用同一台手机浏览器打开 http://127.0.0.1:8787。
 - 不要把 127.0.0.1 换成别人的手机或电脑地址。
-- 如果仍然打不开，按 Ctrl+C 停止后重新运行 ./termux-start.sh。
+- 如果仍然打不开，按 Ctrl+C 停止后重新运行 cd floatweixinbot && bash termux-start.sh。
 
 八、脚本说明
 
 1. termux-install.sh
-   - Termux 一键安装脚本。
-   - 会安装 Node.js。
-   - 安装完成后会自动进入 termux-start.sh。
+   - Termux 一键安装/启动脚本。
+   - 在项目目录中运行时，会安装依赖、授权脚本，并自动进入 termux-start.sh。
+   - 通过 Raw/Bash 一键命令在非项目目录运行时，会自动安装 git、bash、Node.js，克隆或更新项目，再进入 termux-start.sh。
 
 2. termux-start.sh
    - Termux 一键启动脚本。
