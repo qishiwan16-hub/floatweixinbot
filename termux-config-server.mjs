@@ -12,6 +12,9 @@ const CONFIG_EXAMPLE_PATH = resolve(here, "config.example.txt");
 const DEFAULT_BUCKET = "ai-phone-backup";
 const DEFAULT_INTERVAL_SECONDS = 5;
 const INDEX_PATH = "weixin-cloud/index.json";
+// 配置页版本号：用于让用户确认浏览器/服务加载的是最新页面。
+// 如果页面上看不到这个版本号，或仍出现“方式二/配置码”，说明加载的是旧页面或旧服务。
+const PAGE_VERSION = "2026-06-19-single-form";
 const HOST = process.env.AI_PHONE_CONFIG_HOST || "127.0.0.1";
 const PORT = Number(process.env.AI_PHONE_CONFIG_PORT || 8787);
 
@@ -53,12 +56,12 @@ const server = createServer(async (req, res) => {
         const result = await testSupabaseConfig(config);
         sendHtml(res, renderPage(getConfigStatus(), {
           type: "success",
-          message: `连接成功：已读取 ${result.bucket}/${result.path}，index 更新时间 ${result.updatedAt || "未知"}，运行包数量 ${result.packageCount}。`,
+          message: `测试连接成功（HTTP ${result.httpStatus}）。正在测试的 URL：${result.supabaseUrl}；读取对象：${result.bucket}/${result.path}；index 更新时间 ${result.updatedAt || "未知"}，运行包数量 ${result.packageCount}。（service_role key 不会明文显示）`,
         }, { supabaseUrl: config.supabaseUrl }));
       } catch (err) {
         sendHtml(res, renderPage(getConfigStatus(), {
           type: "error",
-          message: `测试连接失败：${friendlyTestError(err)}`,
+          message: `测试连接失败：${friendlyTestError(err)}（测试的 URL：${submittedUrl || "未填写"}；读取对象：${DEFAULT_BUCKET}/${INDEX_PATH}）`,
         }, { supabaseUrl: submittedUrl }), 200);
       }
       return;
@@ -155,7 +158,8 @@ function formatSaveSuccessMessage(result) {
 
 async function testSupabaseConfig(config) {
   const checked = validateConfig(config);
-  const index = await getSupabaseObjectJson(checked, INDEX_PATH);
+  const fetched = await getSupabaseObjectJson(checked, INDEX_PATH);
+  const index = fetched.json;
   if (!index || typeof index !== "object" || Array.isArray(index)) {
     throw new Error(`${INDEX_PATH} 已读取，但内容不是有效 JSON 对象。请先让小手机重新提交远程备份/上传最新微信运行包。`);
   }
@@ -163,6 +167,8 @@ async function testSupabaseConfig(config) {
     throw new Error(`${INDEX_PATH} 已读取，但缺少 packages 数组。请先让小手机重新提交远程备份/上传最新微信运行包。`);
   }
   return {
+    supabaseUrl: fetched.supabaseUrl,
+    httpStatus: fetched.httpStatus,
     bucket: checked.supabaseBucket || DEFAULT_BUCKET,
     path: INDEX_PATH,
     updatedAt: typeof index.updatedAt === "string" ? index.updatedAt : "",
@@ -204,7 +210,7 @@ async function getSupabaseObjectJson(config, path) {
   }
 
   try {
-    return JSON.parse(text);
+    return { json: JSON.parse(text), httpStatus: res.status, supabaseUrl };
   } catch {
     throw new Error(`已连接 Supabase，但 ${bucket}/${objectPath} 不是有效 JSON。请先让小手机重新提交远程备份/上传最新微信运行包。`);
   }
@@ -343,14 +349,17 @@ small{display:block;color:#667085;margin-top:6px;line-height:1.55;}.danger{color
 <body><main>
 <h1>AI Phone 微信助手配置</h1>
 <p>在 Termux 本机保存 Supabase 连接信息。页面只监听本机地址，key 只显示打码占位，不会明文展示。</p>
+<p><small>页面版本：<code>${escapeHtml(PAGE_VERSION)}</code>。本页只有一种配置方式：直接填写 Supabase URL 和 service_role key。如果你还看到“方式二／粘贴完整配置码”，说明加载的是旧页面或旧服务，请按 README 第十节更新项目并重启 <code>termux-start.sh</code>。</small></p>
 ${flashHtml}
 <section class="card">
   <h2>当前状态 <span class="badge ${statusClass}">${escapeHtml(status.message || "未知")}</span></h2>
   <p>配置文件：<code>config.txt</code> ${status.exists ? "已存在" : "未创建"}</p>
-  ${status.valid ? `<p>Supabase URL 已写入 <code>config.txt</code>：<code>${escapeHtml(status.supabaseUrl)}</code><br>Bucket：<code>${escapeHtml(status.bucket)}</code><br>轮询间隔：<code>${escapeHtml(String(status.interval))}s</code><br>Key（打码显示）：<code>${escapeHtml(status.keyPreview)}</code></p>` : ""}
+  ${status.valid
+    ? `<p>已读取到 <code>config.txt</code>，Supabase URL 已写入：<code>${escapeHtml(status.supabaseUrl)}</code><br>Bucket：<code>${escapeHtml(status.bucket)}</code><br>轮询间隔：<code>${escapeHtml(String(status.interval))}s</code><br>Key（已打码，不填会沿用旧 key）：<code>${escapeHtml(status.keyPreview)}</code></p>`
+    : `<p>还没有把 Supabase URL 写入 <code>config.txt</code>。请在下方填写 Supabase URL 和 service_role key 后点“保存配置”。</p>`}
 </section>
 <section class="card">
-  <h2>方式一：输入 Supabase URL 和 service_role key</h2>
+  <h2>保存 Supabase 配置</h2>
   <form method="post" action="/save">
     <label for="supabaseUrl">Supabase URL</label>
     <input id="supabaseUrl" name="supabaseUrl" value="${escapeHtml(supabaseUrlValue)}" placeholder="https://xxxx.supabase.co" autocomplete="off" autocapitalize="none" spellcheck="false" required>
@@ -363,7 +372,7 @@ ${flashHtml}
 </section>
 <section class="card">
   <p class="danger">不要把 <code>config.txt</code>、Supabase URL 或 service_role key 发给别人。</p>
-  <p><small>保存后可回到 Termux 执行一键启动脚本，助手会自动读取 Supabase 上最新运行包。测试连接会读取默认 Bucket <code>${escapeHtml(DEFAULT_BUCKET)}</code> 中的 <code>${escapeHtml(INDEX_PATH)}</code>。</small></p>
+  <p><small>保存后可回到 Termux 执行一键启动脚本，助手会自动读取 Supabase 上最新运行包。点“测试连接”只会测试上面这一份表单：当前 URL +（不填则沿用旧 key）当前 key，读取默认 Bucket <code>${escapeHtml(DEFAULT_BUCKET)}</code> 中的 <code>${escapeHtml(INDEX_PATH)}</code>，并显示 HTTP 状态和正在测试的 URL；不会显示明文 key。</small></p>
 </section>
 </main></body></html>`;
 }
