@@ -88,7 +88,7 @@ enter_project_dir() {
 
 enter_project_dir
 
-chmod +x ./termux-start.sh ./termux-install.sh 2>/dev/null || true
+chmod +x ./termux-start.sh ./termux-install.sh ./termux-test-once.sh 2>/dev/null || true
 
 printf '\n[AI Phone] 安装完成，即将进入启动流程。\n'
 echo "[AI Phone] 接下来会进入 termux-start.sh。"
